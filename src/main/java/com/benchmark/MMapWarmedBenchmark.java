@@ -1,5 +1,6 @@
 package com.benchmark;
 
+import com.sun.jna.Platform;
 import java.nio.MappedByteBuffer;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
@@ -18,11 +19,11 @@ import org.openjdk.jmh.annotations.Warmup;
 
 @Fork(1)
 @State(Scope.Benchmark)
-@Warmup(iterations = 5, time = 5)
-@Measurement(iterations = 5, time = 5)
+@Warmup(iterations = 0, time = 5)
+@Measurement(iterations = 1, time = 5)
 @BenchmarkMode({Mode.SingleShotTime})
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-public class MMapCachedBenchmark {
+public class MMapWarmedBenchmark {
 
     @Param({"32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "134217728", "1073741824"})
     public int segmentSize;
@@ -34,6 +35,9 @@ public class MMapCachedBenchmark {
     @Setup
     public void setUp() {
         mappedFile = FileUtil.generateRandomMappedFile();
+        if (Platform.isLinux()) {
+            mappedFile.warmMappedFile();
+        }
 
         payload = new byte[segmentSize];
         Arrays.fill(payload, (byte) 1);

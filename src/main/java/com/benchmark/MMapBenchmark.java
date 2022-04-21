@@ -25,9 +25,10 @@
 
 package com.benchmark;
 
-import java.io.File;
-import java.io.IOException;
 import java.nio.MappedByteBuffer;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -50,19 +51,50 @@ import org.openjdk.jmh.annotations.Warmup;
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class MMapBenchmark {
 
-    public File file;
-
     @Param({"32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "134217728", "1073741824"})
-    public int fileSize;
+    public int segmentSize;
+
+    public MappedFile mappedFile;
+    public List<MappedFile> mappedFileList;
+
+    byte[] payload;
+
+    @Setup
+    public void setUp() {
+        mappedFileList = new ArrayList<MappedFile>();
+
+        payload = new byte[segmentSize];
+        Arrays.fill(payload, (byte) 1);
+    }
+
+    @TearDown
+    public void tearDown() {
+        for (MappedFile mappedFile : mappedFileList) {
+            mappedFile.destroy();
+        }
+    }
 
     @Benchmark
-    public void mmapRead() throws IOException {
-        MappedByteBuffer mappedByteBuffer = FileUtil.getMappedByteBuffer();
+    public void mmapRead() {
+        mappedFile = FileUtil.generateRandomMappedFile();
+        mappedFileList.add(mappedFile);
+        MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
 
-        byte[] bytes = new byte[fileSize];
-        mappedByteBuffer.position(0);
         while (mappedByteBuffer.hasRemaining()) {
-            mappedByteBuffer.get(bytes);
+            mappedByteBuffer.get(payload);
+        }
+    }
+
+    @Benchmark
+    public void mmapWrite() {
+        mappedFile = FileUtil.generateRandomMappedFile();
+        mappedFileList.add(mappedFile);
+        MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
+
+        int length = 0;
+        while (length < mappedByteBuffer.capacity()) {
+            length += payload.length;
+            mappedByteBuffer.put(payload);
         }
     }
 }

@@ -25,16 +25,17 @@
 
 package com.benchmark;
 
+import com.benchmark.util.FileUtil;
+import com.benchmark.model.MappedFile;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -45,7 +46,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
-import static com.benchmark.FileUtil.FILE_SIZE;
+import static com.benchmark.util.FileUtil.FILE_SIZE;
 
 @Fork(1)
 @State(Scope.Benchmark)
@@ -59,29 +60,23 @@ public class FileChannelBenchmark {
     public int segmentSize;
 
     public MappedFile mappedFile;
-    public List<MappedFile> mappedFileList;
-
     byte[] payload;
 
-    @Setup
-    public void setUp() {
-        mappedFileList = new ArrayList<MappedFile>();
+    @Setup(Level.Iteration)
+    public void setup() {
+        mappedFile = FileUtil.generateRandomMappedFile();
 
         payload = new byte[segmentSize];
         Arrays.fill(payload, (byte) 1);
     }
 
-    @TearDown
+    @TearDown(Level.Iteration)
     public void tearDown() {
-        for (MappedFile mappedFile : mappedFileList) {
-            mappedFile.destroy();
-        }
+        mappedFile.destroy();
     }
 
     @Benchmark
     public void fileChannelRead() throws IOException {
-        mappedFile = FileUtil.generateRandomMappedFile();
-        mappedFileList.add(mappedFile);
         FileChannel fileChannel = mappedFile.getFileChannel();
 
         ByteBuffer bytebuffer = ByteBuffer.allocate(segmentSize);
@@ -96,8 +91,6 @@ public class FileChannelBenchmark {
 
     @Benchmark
     public void fileChannelWrite() throws IOException {
-        mappedFile = FileUtil.generateRandomMappedFile();
-        mappedFileList.add(mappedFile);
         FileChannel fileChannel = mappedFile.getFileChannel();
 
         ByteBuffer byteBuffer = ByteBuffer.wrap(payload);

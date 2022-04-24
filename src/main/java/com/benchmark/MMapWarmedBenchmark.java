@@ -1,5 +1,7 @@
 package com.benchmark;
 
+import com.benchmark.util.FileUtil;
+import com.benchmark.model.MappedFile;
 import com.sun.jna.Platform;
 import java.nio.MappedByteBuffer;
 import java.util.Arrays;
@@ -7,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -29,10 +32,9 @@ public class MMapWarmedBenchmark {
     public int segmentSize;
 
     public MappedFile mappedFile;
-
     byte[] payload;
 
-    @Setup
+    @Setup(Level.Iteration)
     public void setUp() {
         mappedFile = FileUtil.generateRandomMappedFile();
         if (Platform.isLinux()) {
@@ -43,7 +45,7 @@ public class MMapWarmedBenchmark {
         Arrays.fill(payload, (byte) 1);
     }
 
-    @TearDown
+    @TearDown(Level.Iteration)
     public void tearDown() {
         mappedFile.destroy();
     }
@@ -51,7 +53,6 @@ public class MMapWarmedBenchmark {
     @Benchmark
     public void mmapCachedRead() {
         MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
-        mappedByteBuffer.position(0);
 
         while (mappedByteBuffer.hasRemaining()) {
             mappedByteBuffer.get(payload);
@@ -61,7 +62,6 @@ public class MMapWarmedBenchmark {
     @Benchmark
     public void mmapCachedWrite() {
         MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
-        mappedByteBuffer.position(0);
 
         int length = 0;
         while (length < mappedByteBuffer.capacity()) {

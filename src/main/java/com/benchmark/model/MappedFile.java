@@ -1,4 +1,4 @@
-package com.benchmark;
+package com.benchmark.model;
 
 import com.benchmark.util.CLibrary;
 import com.sun.jna.NativeLong;
@@ -29,7 +29,7 @@ public class MappedFile {
     public MappedFile() {
     }
 
-    public MappedFile(String fileName, int fileSize) throws IOException {
+    public MappedFile(String fileName, int fileSize, boolean mapped) throws IOException {
         this.fileName = fileName;
         this.fileSize = fileSize;
         this.file = new File(fileName);
@@ -38,13 +38,13 @@ public class MappedFile {
 
         boolean ok = false;
 
-        ensureDirOK(this.file.getParent());
-
         try {
             this.randomAccessFile = new RandomAccessFile(this.file, "rw");
             randomAccessFile.setLength(fileSize);
             this.fileChannel = randomAccessFile.getChannel();
-            this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
+            if (mapped) {
+                this.mappedByteBuffer = this.fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, fileSize);
+            }
             ok = true;
         } catch (FileNotFoundException e) {
             System.out.println("Failed to create file " + this.fileName + e);
@@ -73,7 +73,9 @@ public class MappedFile {
     }
 
     public boolean destroy() {
-        clean(this.mappedByteBuffer);
+        if (this.mappedByteBuffer != null) {
+            clean(this.mappedByteBuffer);
+        }
         try {
             this.fileChannel.close();
             return this.file.delete();

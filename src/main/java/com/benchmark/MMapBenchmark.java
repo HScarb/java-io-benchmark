@@ -25,6 +25,8 @@
 
 package com.benchmark;
 
+import com.benchmark.util.FileUtil;
+import com.benchmark.model.MappedFile;
 import java.nio.MappedByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -33,6 +35,7 @@ import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -55,29 +58,23 @@ public class MMapBenchmark {
     public int segmentSize;
 
     public MappedFile mappedFile;
-    public List<MappedFile> mappedFileList;
-
     byte[] payload;
 
-    @Setup
+    @Setup(Level.Iteration)
     public void setUp() {
-        mappedFileList = new ArrayList<MappedFile>();
+        mappedFile = FileUtil.generateRandomMappedFile();
 
         payload = new byte[segmentSize];
         Arrays.fill(payload, (byte) 1);
     }
 
-    @TearDown
+    @TearDown(Level.Iteration)
     public void tearDown() {
-        for (MappedFile mappedFile : mappedFileList) {
-            mappedFile.destroy();
-        }
+        mappedFile.destroy();
     }
 
     @Benchmark
     public void mmapRead() {
-        mappedFile = FileUtil.generateRandomMappedFile();
-        mappedFileList.add(mappedFile);
         MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
 
         while (mappedByteBuffer.hasRemaining()) {
@@ -87,8 +84,6 @@ public class MMapBenchmark {
 
     @Benchmark
     public void mmapWrite() {
-        mappedFile = FileUtil.generateRandomMappedFile();
-        mappedFileList.add(mappedFile);
         MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
 
         int length = 0;

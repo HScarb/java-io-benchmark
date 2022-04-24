@@ -1,13 +1,15 @@
 package com.benchmark;
 
-import com.benchmark.util.FileUtil;
 import com.benchmark.model.MappedFile;
-import java.nio.MappedByteBuffer;
+import com.benchmark.util.FileUtil;
+import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
 import org.openjdk.jmh.annotations.Fork;
+import org.openjdk.jmh.annotations.Level;
 import org.openjdk.jmh.annotations.Measurement;
 import org.openjdk.jmh.annotations.Mode;
 import org.openjdk.jmh.annotations.OutputTimeUnit;
@@ -18,52 +20,53 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
+import static com.benchmark.util.FileUtil.FILE_SIZE;
+
 @Fork(1)
 @State(Scope.Benchmark)
 @Warmup(iterations = 5, time = 5)
 @Measurement(iterations = 5, time = 5)
 @BenchmarkMode({Mode.SingleShotTime})
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
-public class MMapCachedBenchmark {
-
-    @Param({"32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "134217728", "1073741824"})
+public class RandomAccessFileBenchmark {
+    @Param({"32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "1048576", "134217728", "1073741824"})
     public int segmentSize;
 
     public MappedFile mappedFile;
-    byte[] payload;
+    public byte[] payload;
 
-    @Setup
-    public void setUp() {
+    @Setup(Level.Iteration)
+    public void setup() {
         mappedFile = FileUtil.generateRandomMappedFile();
-
         payload = new byte[segmentSize];
         Arrays.fill(payload, (byte) 1);
     }
 
-    @TearDown
-    public void tearDown() {
+    @TearDown(Level.Iteration)
+    public void teardown() {
         mappedFile.destroy();
     }
 
     @Benchmark
-    public void mmapCachedRead() {
-        MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
-        mappedByteBuffer.position(0);
+    public void read() throws IOException {
+        RandomAccessFile raf = mappedFile.getRandomAccessFile();
 
-        while (mappedByteBuffer.hasRemaining()) {
-            mappedByteBuffer.get(payload);
+        while (true) {
+            int len = raf.read(payload);
+            if (len == -1) {
+                break;
+            }
         }
     }
 
     @Benchmark
-    public void mmapCachedWrite() {
-        MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
-        mappedByteBuffer.position(0);
+    public void write() throws IOException {
+        RandomAccessFile raf = mappedFile.getRandomAccessFile();
 
         int length = 0;
-        while (length < mappedByteBuffer.capacity()) {
+        while (length < FILE_SIZE) {
             length += segmentSize;
-            mappedByteBuffer.put(payload);
+            raf.write(payload);
         }
     }
 }

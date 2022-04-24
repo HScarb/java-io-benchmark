@@ -2,9 +2,7 @@ package com.benchmark;
 
 import com.benchmark.model.MappedFile;
 import com.benchmark.util.FileUtil;
-import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -23,7 +21,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
-import static com.benchmark.util.FileUtil.FILE_SIZE;
+import static com.benchmark.consts.FileConst.FILE_SIZE;
 
 @Fork(1)
 @State(Scope.Benchmark)

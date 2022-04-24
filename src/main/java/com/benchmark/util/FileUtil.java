@@ -1,5 +1,6 @@
 package com.benchmark.util;
 
+import com.benchmark.consts.FileConst;
 import com.benchmark.model.MappedFile;
 import java.io.IOException;
 import java.lang.reflect.Method;
@@ -9,15 +10,14 @@ import java.security.PrivilegedAction;
 import java.util.UUID;
 
 public class FileUtil {
-    public static final int FILE_SIZE = 1024 * 1024 * 1024;
 
     public static MappedFile generateRandomFile() throws IOException {
-        return new MappedFile(UUID.randomUUID().toString(), FILE_SIZE, false);
+        return new MappedFile(UUID.randomUUID().toString(), FileConst.FILE_SIZE, false);
     }
 
     public static MappedFile generateRandomMappedFile() {
         try {
-            return new MappedFile(UUID.randomUUID().toString(), FILE_SIZE, true);
+            return new MappedFile(UUID.randomUUID().toString(), FileConst.FILE_SIZE, true);
         } catch (IOException e) {
             System.out.println("Failed to generate random mapped file");
         }

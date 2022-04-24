@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.Arrays;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.Benchmark;
 import org.openjdk.jmh.annotations.BenchmarkMode;
@@ -46,7 +47,8 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
-import static com.benchmark.util.FileUtil.FILE_SIZE;
+import static com.benchmark.consts.FileConst.FILE_SIZE;
+import static com.benchmark.consts.FileConst.FLUSH_SIZE;
 
 @Fork(1)
 @State(Scope.Benchmark)
@@ -61,6 +63,9 @@ public class FileChannelBenchmark {
 
     public MappedFile mappedFile;
     byte[] payload;
+    ByteBuffer byteBuffer;
+
+    private int len = 0;
 
     @Setup(Level.Iteration)
     public void setup() {
@@ -68,6 +73,7 @@ public class FileChannelBenchmark {
 
         payload = new byte[segmentSize];
         Arrays.fill(payload, (byte) 1);
+        byteBuffer = ByteBuffer.wrap(payload);
     }
 
     @TearDown(Level.Iteration)
@@ -93,11 +99,36 @@ public class FileChannelBenchmark {
     public void fileChannelWrite() throws IOException {
         FileChannel fileChannel = mappedFile.getFileChannel();
 
-        ByteBuffer byteBuffer = ByteBuffer.wrap(payload);
         int length = 0;
         while (length < FILE_SIZE) {
             length += segmentSize;
             fileChannel.write(byteBuffer);
         }
+    }
+
+    @Benchmark
+    public void asyncWrite() throws IOException, InterruptedException {
+        FileChannel fileChannel = mappedFile.getFileChannel();
+
+        len = 0;
+        CountDownLatch latch = new CountDownLatch(1);
+        new Thread(() -> {
+            do {
+                if (len >= FLUSH_SIZE && len % FLUSH_SIZE == 0) {
+                    try {
+                        fileChannel.force(false);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            } while (latch.getCount() != 0);
+        }).start();
+
+        while (len < FILE_SIZE) {
+            len += segmentSize;
+            fileChannel.write(byteBuffer);
+        }
+        latch.countDown();
+        latch.await();
     }
 }

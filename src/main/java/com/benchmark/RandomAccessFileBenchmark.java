@@ -20,7 +20,7 @@ import org.openjdk.jmh.annotations.State;
 import org.openjdk.jmh.annotations.TearDown;
 import org.openjdk.jmh.annotations.Warmup;
 
-import static com.benchmark.util.FileUtil.FILE_SIZE;
+import static com.benchmark.consts.FileConst.FILE_SIZE;
 
 @Fork(1)
 @State(Scope.Benchmark)

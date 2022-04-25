@@ -179,7 +179,7 @@ public class MappedFile {
         Pointer pointer = new Pointer(address);
         {
             int ret = CLibrary.INSTANCE.mlock(pointer, new NativeLong(this.fileSize));
-            System.out.printf("mlock %s %s %s ret = %d time consuming = %d%n", address, this.fileName, this.fileSize, ret, System.currentTimeMillis() - beginTime);
+            System.out.printf("%nmlock %s %s %s ret = %d time consuming = %d%n", address, this.fileName, this.fileSize, ret, System.currentTimeMillis() - beginTime);
         }
 
         {

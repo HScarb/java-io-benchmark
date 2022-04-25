@@ -22,13 +22,13 @@ import org.openjdk.jmh.annotations.Warmup;
 
 @Fork(1)
 @State(Scope.Benchmark)
-@Warmup(iterations = 0, time = 5)
-@Measurement(iterations = 1, time = 5)
+@Warmup(iterations = 5, time = 5)
+@Measurement(iterations = 5, time = 5)
 @BenchmarkMode({Mode.SingleShotTime})
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class MMapWarmedBenchmark {
 
-    @Param({"32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "134217728", "1073741824"})
+    @Param({"16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "65536", "1048576", "16777216", "134217728", "1073741824"})
     public int segmentSize;
 
     public MappedFile mappedFile;

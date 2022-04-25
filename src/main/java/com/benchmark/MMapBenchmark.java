@@ -30,7 +30,7 @@ import static com.benchmark.consts.FileConst.FLUSH_SIZE;
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class MMapBenchmark {
 
-    @Param({"32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "134217728", "1073741824"})
+    @Param({"16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "65536", "1048576", "16777216", "134217728", "1073741824"})
     public int segmentSize;
 
     public MappedFile mappedFile;
@@ -51,7 +51,7 @@ public class MMapBenchmark {
         mappedFile.destroy();
     }
 
-    //    @Benchmark
+    @Benchmark
     public void mmapRead() {
         MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
 
@@ -60,7 +60,7 @@ public class MMapBenchmark {
         }
     }
 
-    //    @Benchmark
+    @Benchmark
     public void mmapWrite() {
         MappedByteBuffer mappedByteBuffer = mappedFile.getMappedByteBuffer();
 
@@ -91,6 +91,5 @@ public class MMapBenchmark {
             mappedByteBuffer.put(payload);
         }
         latch.countDown();
-        latch.await();
     }
 }

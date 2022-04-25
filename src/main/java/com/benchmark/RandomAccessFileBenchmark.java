@@ -29,7 +29,7 @@ import static com.benchmark.consts.FileConst.FILE_SIZE;
 @BenchmarkMode({Mode.SingleShotTime})
 @OutputTimeUnit(TimeUnit.MILLISECONDS)
 public class RandomAccessFileBenchmark {
-    @Param({"32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "1048576", "134217728", "1073741824"})
+    @Param({"16", "32", "64", "128", "256", "512", "1024", "2048", "4096", "16384", "65536", "1048576", "16777216", "134217728", "1073741824"})
     public int segmentSize;
 
     public MappedFile mappedFile;
